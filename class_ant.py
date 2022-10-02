@@ -53,7 +53,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
         self.joint_pos_deg_min = np.array([-30,30,-30,-70,-30,-70,-30,30])
-        self.joint_pos_deg_max = np.array([30,70,-30,-30,30,-30,30,70])
+        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])
         if self.rand_mass is not None:
             self.set_random_leg_weight()
         else:
@@ -284,7 +284,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
         self.joint_pos_deg_min = np.array([-30,30,-30,-70,-30,-70,-30,30])
-        self.joint_pos_deg_max = np.array([30,70,-30,-30,30,-30,30,70])
+        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])
         if self.rand_mass is not None:
             self.set_random_box_weight()
         else:
