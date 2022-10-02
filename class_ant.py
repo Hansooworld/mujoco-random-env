@@ -206,7 +206,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         """
         q = self.sim.data.qpos.flat
         return np.asarray(
-            [q[9],q[10],q[13],q[14],q[17],q[18],q[21],q[22]]
+            [q[7],q[8],q[9],q[10],q[11],q[12],q[13],q[14]]
             )*180.0/np.pi
 
     def get_heading(self):
@@ -434,7 +434,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         """
         q = self.sim.data.qpos.flat
         return np.asarray(
-            [q[9],q[10],q[13],q[14],q[17],q[18],q[21],q[22]]
+            [q[7],q[8],q[9],q[10],q[11],q[12],q[13],q[14]]
             )*180.0/np.pi
 
     def get_heading(self):

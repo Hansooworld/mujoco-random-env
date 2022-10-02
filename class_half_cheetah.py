@@ -192,6 +192,15 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         friction = target.attrib["friction"]
         return friction
 
+    def get_joint_pos_deg(self):
+        """
+            Get joint position in [Deg]
+        """
+        q = self.sim.data.qpos.flat
+        return np.asarray(
+            [q[3],q[4],q[5],q[6],q[7],q[8]]
+            )*180.0/np.pi
+            
     def get_time(self):
         """
             Get time in [Sec]
@@ -394,6 +403,15 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
         target   = root[1][1]
         friction = target.attrib["friction"]
         return friction
+
+    def get_joint_pos_deg(self):
+        """
+            Get joint position in [Deg]
+        """
+        q = self.sim.data.qpos.flat
+        return np.asarray(
+            [q[3],q[4],q[5],q[6],q[7],q[8]]
+            )*180.0/np.pi
 
     def get_time(self):
         """
