@@ -45,7 +45,10 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         """
         self.VERBOSE    = VERBOSE
         self.name       = name
-        self.xml_path   = os.path.abspath(xml_path)
+        if rand_fric is None and rand_fric is None:
+            self.xml_path = os.path.abspath('xml/ant_standard.xml')
+        else:
+            self.xml_path = os.path.abspath(xml_path)
         self.frame_skip = frame_skip
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
@@ -486,11 +489,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         return frame
 
 if __name__ == "__main__":
-    env = AntRandomEnvClassWithBox(rand_mass=[0,0.1], render_mode=None)
-    print(env.get_box_weight())
-    # for i in range(10):
-    #     env.reset()
-        # print(env.get_leg_weight())
+    env = AntRandomEnvClass(rand_mass=None, rand_fric=None, render_mode=None)
     for i in range(1000):
         env.render()
         action = np.random.standard_normal(8) * 0.6

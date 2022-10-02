@@ -44,7 +44,10 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         """
         self.VERBOSE    = VERBOSE
         self.name       = name
-        self.xml_path   = os.path.abspath(xml_path)
+        if rand_mass is None and rand_fric is None:
+            self.xml_path = os.path.abspath('xml/half_cheetah_standard.xml')
+        else:
+            self.xml_path = os.path.abspath(xml_path)
         self.frame_skip = frame_skip
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
@@ -436,8 +439,7 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
         return frame
 
 if __name__ == "__main__":
-    env = HalfCheetahRandomEnvClassWithBox(rand_mass=[5, 20], render_mode=None)
-    print(env.get_box_weight())
+    env = HalfCheetahRandomEnvClass(rand_mass=None, rand_fric=None, render_mode=None)
     for i in range(1000):
         action = np.random.standard_normal(6)
         env.step(action)
