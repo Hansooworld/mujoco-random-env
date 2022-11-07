@@ -60,7 +60,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         self.k_i = 0.01
         self.k_d = 0.001
         self.joint_pos_deg_min = np.array([-30,30,-30,-70,-30,-70,-30,30])
-        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])
+        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])    
         self.reset_random()
 
     def step(self, a):
@@ -157,7 +157,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )
+            )    
 
     def set_random_leg_weight(self):
         low_bound      = self.rand_mass[0]/3
@@ -451,7 +451,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )
+            )        
 
     def set_random_box_weight(self):
         low_bound      = self.rand_mass[0]
@@ -710,8 +710,6 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
 
         # Timing
         self.hz = int(1/self.dt)
-        # Reset
-        self.reset()
         # Viewer setup
         if self.render_mode is not None:
             self.viewer_custom_setup(
@@ -719,7 +717,7 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )
+            )        
 
     def set_random_box_weight(self):
         low_bound      = self.rand_mass_box[0]
@@ -929,15 +927,15 @@ if __name__ == "__main__":
     env = AntRandomEnvClassMixVersion(VERBOSE=False, rand_mass_box=[1,2], rand_mass_leg=[1,2],rand_fric=[0.3, 0.8],render_mode=None)       
     print(env.get_fric(), env.get_box_weight())
     # env = AntRandomEnvClassMixVersion(rand_mass_box=[1, 4], rand_mass_leg=[1, 4], rand_fric=[5, 6], render_mode=None)
-    env.reset_random()
+    # env.reset_random()
     for i in range(3000):
         env.render()
-        if i % 1 == 0:
-            # env.reset()
+        if i % 100 == 0:
+            env.reset()
             env.reset_random()
-            env.set_box_weight(1)
-            env.set_leg_weight(1)
-            env.set_fric(0.2)
+            # env.set_box_weight(1)
+            # env.set_leg_weight(1)
+            # env.set_fric(0.2)
             # env.set_box_weight(1)
             print(env.get_fric(), env.get_box_weight(), env.get_leg_weight())
         # if i % 33 == 0:
