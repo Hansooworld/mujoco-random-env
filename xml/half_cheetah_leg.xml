@@ -2,7 +2,7 @@
   <compiler angle="radian" coordinate="local" inertiafromgeom="true" />
   <default>
     <joint armature=".1" damping=".01" limited="true" solimplimit="0 .8 .03" solreflimit=".02 1" stiffness="8" />
-    <geom conaffinity="0" condim="3" contype="1" friction="0.39 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1" />
+    <geom conaffinity="0" condim="3" contype="1" friction="1 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1" />
     <motor ctrllimited="true" ctrlrange="-1 1" />
   </default>
   <size nstack="300000" nuser_geom="1" />
@@ -30,10 +30,10 @@
         <geom axisangle="0 1 0 -3.8" name="bthigh" pos=".1 0 -.13" size="0.046 .145" type="capsule" />
         <body name="bshin" pos=".16 0 -.25">
           <joint axis="0 1 0" damping="4.5" name="bshin" pos="0 0 0" range="-.785 .785" stiffness="180" type="hinge" />
-          <geom axisangle="0 1 0 -2.03" name="bshin" pos="-.14 0 -.07" rgba="0.967 0.967 0.967 1" mass="0.55" size="0.046 .15" type="capsule" />
+          <geom axisangle="0 1 0 -2.03" name="bshin" pos="-.14 0 -.07" rgba="0.002 0.002 0.002 1" mass="2.495" size="0.046 .15" type="capsule" />
           <body name="bfoot" pos="-.28 0 -.14">
             <joint axis="0 1 0" damping="3" name="bfoot" pos="0 0 0" range="-.4 .785" stiffness="120" type="hinge" />
-            <geom axisangle="0 1 0 -.27" name="bfoot" pos=".03 0 -.097" rgba="0.967 0.967 0.967 1" mass="0.55" size="0.046 .094" type="capsule" />
+            <geom axisangle="0 1 0 -.27" name="bfoot" pos=".03 0 -.097" rgba="0.002 0.002 0.002 1" mass="2.495" size="0.046 .094" type="capsule" />
           </body>
         </body>
       </body>

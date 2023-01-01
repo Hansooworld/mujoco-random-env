@@ -1,4 +1,4 @@
-import math, os
+import math, os, torch
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
@@ -33,7 +33,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
                 name        = 'Ant',
                 xml_path    = 'xml/ant_leg.xml',
                 frame_skip  = 5,
-                rand_mass   = [1, 4],
+                rand_mass   = [1, 8],
                 rand_fric   = None,
                 render_mode = 'human',
                 render_w    = 1500,
@@ -45,13 +45,10 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         """
         self.VERBOSE    = VERBOSE
         self.name       = name
+        self.xml_path = os.path.abspath(xml_path)
         self.frame_skip = frame_skip
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
-        if rand_mass is None and rand_fric is None:
-            self.xml_path = os.path.abspath('xml/ant_standard.xml')
-        else:
-            self.xml_path = os.path.abspath(xml_path)
         self.render_mode = render_mode
         self.render_w = render_w
         self.render_h = render_h
@@ -60,7 +57,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         self.k_i = 0.01
         self.k_d = 0.001
         self.joint_pos_deg_min = np.array([-30,30,-30,-70,-30,-70,-30,30])
-        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])    
+        self.joint_pos_deg_max = np.array([30,70,30,-30,30,-30,30,70])
         self.reset_random()
 
     def step(self, a):
@@ -69,23 +66,18 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
-        y_pos_before      = self.get_body_com("torso")[1]
         heading_before    = self.get_heading()
-        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
-        self.prev_torque  = a
 
         # Run sim
         self.do_simulation(a, self.frame_skip)
         x_pos_after   = self.get_body_com("torso")[0]
-        y_pos_after   = self.get_body_com("torso")[1]
         heading_after = self.get_heading()
         heading_diff  = heading_after - heading_before
-        z_pos = self.get_body_com("torso")[2]
 
         # Accumulate
         self.a    = a
         self.o    = self._get_obs()
-        self.r    = (x_pos_after - x_pos_before) / self.dt
+        self.r    = ((x_pos_after-x_pos_before)/self.dt)
         self.info = dict()
 
         # Done condition
@@ -101,10 +93,8 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat[2:],
-            self.sim.data.qvel.flat,
-            self.prev_state,
-            self.prev_torque,
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat
         ])
     
     def reset_model(self):
@@ -147,6 +137,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         if self.VERBOSE:
             print("Ant(4legs) with random leg weights")   
             print("Obs Dim: [{}] Act Dim: [{}] dt:[{}]".format(self.odim, self.adim, self.dt))
+            print("leg_mass: [{}] fric:[{}]".format(self.get_leg_weight(), self.get_fric()))
 
         # Timing
         self.hz = int(1/self.dt)
@@ -157,7 +148,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )    
+            )
 
     def set_random_leg_weight(self):
         low_bound      = self.rand_mass[0]/3
@@ -220,7 +211,7 @@ class AntRandomEnvClass(mujoco_env.MujocoEnv,utils.EzPickle):
         target_tag = root[3][1]
         target_tag.attrib["friction"] = "{} 0.3 0.3".format(friction)
         tree.write(self.xml_path)
-    
+
     def set_fric(self, fric):
         friction = np.round(fric, 2)
         target_xml = open(self.xml_path, 'rt', encoding='UTF8')
@@ -331,7 +322,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
                 name        = 'Ant with box',
                 xml_path    = 'xml/ant_box.xml',
                 frame_skip  = 5,
-                rand_mass   = [1, 4],
+                rand_mass   = [1, 8],
                 rand_fric   = None,
                 render_mode = 'human',
                 render_w    = 1500,
@@ -364,23 +355,18 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
-        y_pos_before      = self.get_body_com("torso")[1]
         heading_before    = self.get_heading()
-        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
-        self.prev_torque  = a
 
         # Run sim
         self.do_simulation(a, self.frame_skip)
         x_pos_after   = self.get_body_com("torso")[0]
-        y_pos_after   = self.get_body_com("torso")[1]
         heading_after = self.get_heading()
         heading_diff  = heading_after - heading_before
-        z_pos = self.get_body_com("torso")[2]
 
         # Accumulate
         self.a    = a
         self.o    = self._get_obs()
-        self.r    = (x_pos_after - x_pos_before) / self.dt
+        self.r    = ((x_pos_after-x_pos_before)/self.dt)
         self.info = dict()
 
         # Done condition
@@ -396,10 +382,8 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat[2:],
-            self.sim.data.qvel.flat,
-            self.prev_state,
-            self.prev_torque,
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat
         ])
     
     def reset_model(self):
@@ -418,7 +402,6 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
             self.set_random_fric()
         else:
             pass
-
         try:
             mujoco_env.MujocoEnv.__init__(
             self,
@@ -441,6 +424,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         if self.VERBOSE:
             print("Ant(4legs) with random box weights")   
             print("Obs Dim: [{}] Act Dim: [{}] dt:[{}]".format(self.odim, self.adim, self.dt))
+            print("box_mass:[{}] fric:[{}]".format(self.get_box_weight(), self.get_fric()))
 
         # Timing
         self.hz = int(1/self.dt)
@@ -451,7 +435,7 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )        
+            )
 
     def set_random_box_weight(self):
         low_bound      = self.rand_mass[0]
@@ -514,6 +498,21 @@ class AntRandomEnvClassWithBox(mujoco_env.MujocoEnv,utils.EzPickle):
         target_tag = root[3][1]
         target_tag.attrib["friction"] = "{} 0.3 0.3".format(friction)
         tree.write(self.xml_path)
+
+        try:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip,
+            mujoco_bindings = 'mujoco_py'
+            )
+        except:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip
+            )
+        utils.EzPickle.__init__(self)
 
     def get_box_weight(self):
         """
@@ -600,9 +599,9 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
                 name        = 'Ant with random box and leg',
                 xml_path    = 'xml/ant_box_leg.xml',
                 frame_skip  = 5,
-                rand_mass_box = [1, 4],
-                rand_mass_leg = [1, 4],
-                rand_fric   = None,
+                rand_mass_box = [1, 8],
+                rand_mass_leg = [1, 8],
+                rand_fric   = [0.2, 5],
                 render_mode = 'human',
                 render_w    = 1500,
                 render_h    = 1000,
@@ -617,7 +616,7 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         self.frame_skip = frame_skip
         self.rand_mass_box = rand_mass_box
         self.rand_mass_leg = rand_mass_leg
-        self.rand_fric  = rand_fric
+        self.rand_fric   = rand_fric
         self.render_mode = render_mode
         self.render_w = render_w
         self.render_h = render_h
@@ -635,23 +634,18 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
-        y_pos_before      = self.get_body_com("torso")[1]
         heading_before    = self.get_heading()
-        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
-        self.prev_torque  = a
 
         # Run sim
         self.do_simulation(a, self.frame_skip)
         x_pos_after   = self.get_body_com("torso")[0]
-        y_pos_after   = self.get_body_com("torso")[1]
         heading_after = self.get_heading()
         heading_diff  = heading_after - heading_before
-        z_pos = self.get_body_com("torso")[2]
 
         # Accumulate
         self.a    = a
         self.o    = self._get_obs()
-        self.r    = (x_pos_after - x_pos_before) / self.dt
+        self.r    = ((x_pos_after-x_pos_before)/self.dt)
         self.info = dict()
 
         # Done condition
@@ -667,10 +661,8 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat[2:],
+            self.sim.data.qpos.flat,
             self.sim.data.qvel.flat,
-            self.prev_state,
-            self.prev_torque,
         ])
     
     def reset_model(self):
@@ -681,8 +673,8 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         return o
 
     def reset_random(self):
-        self.set_random_box_weight()
         self.set_random_leg_weight()
+        self.set_random_box_weight()
         self.set_random_fric()
         try:
             mujoco_env.MujocoEnv.__init__(
@@ -698,8 +690,7 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
             frame_skip      = self.frame_skip
             )
         utils.EzPickle.__init__(self)
-
-        # Observation and action dimension
+        
         self.odim = self.observation_space.shape[0]
         self.adim = self.action_space.shape[0]
 
@@ -717,7 +708,7 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
                 render_w    = self.render_w,
                 render_h    = self.render_h,
                 render_res  = self.render_res
-            )        
+            )
 
     def set_random_box_weight(self):
         low_bound      = self.rand_mass_box[0]
@@ -831,7 +822,23 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         target_tag = root[3][1]
         target_tag.attrib["friction"] = "{} 0.3 0.3".format(friction)
         tree.write(self.xml_path)
-        
+
+        # Open xml
+        try:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip,
+            mujoco_bindings = 'mujoco_py'
+            )
+        except:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip
+            )
+        utils.EzPickle.__init__(self)
+
     def get_box_weight(self):
         """
             Get leg weight in [Kg]
@@ -842,7 +849,6 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         target = root[7][2][7][2][2]
         mass   = np.round(float(target.attrib["mass"]), 2)
         return mass
-
 
     def get_leg_weight(self):
         """
@@ -924,22 +930,10 @@ class AntRandomEnvClassMixVersion(mujoco_env.MujocoEnv,utils.EzPickle):
         return frame
 
 if __name__ == "__main__":
-    env = AntRandomEnvClassMixVersion(VERBOSE=False, rand_mass_box=[1,2], rand_mass_leg=[1,2],rand_fric=[0.3, 0.8],render_mode=None)       
-    print(env.get_fric(), env.get_box_weight())
-    # env = AntRandomEnvClassMixVersion(rand_mass_box=[1, 4], rand_mass_leg=[1, 4], rand_fric=[5, 6], render_mode=None)
-    # env.reset_random()
-    for i in range(3000):
+    # env = AntRandomEnvClassMixVersion(xml_path='xml/ant_box_leg_0.xml', rand_mass_box=[1, 4], rand_mass_leg=[1, 4], rand_fric=[1, 6], render_mode=None)
+    env = AntRandomEnvClass(rand_mass=[1,2], rand_fric=None, render_mode=None)
+    env.set_leg_weight(1)
+    env.set_fric(1)
+    for i in range(1000):
         env.render()
-        if i % 100 == 0:
-            env.reset()
-            env.reset_random()
-            # env.set_box_weight(1)
-            # env.set_leg_weight(1)
-            # env.set_fric(0.2)
-            # env.set_box_weight(1)
-            print(env.get_fric(), env.get_box_weight(), env.get_leg_weight())
-        # if i % 33 == 0:
-        #     env.set_box_weight(1)
-        #     print(env.get_fric()
-        action = np.random.standard_normal(8) * 0.7
-        env.step(action)
+        env.step(np.random.standard_normal(8)*0.05)
