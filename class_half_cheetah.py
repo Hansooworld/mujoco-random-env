@@ -32,7 +32,7 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
                 name        = 'Half cheetah',
                 xml_path    = 'xml/half_cheetah_leg.xml',
                 frame_skip  = 5,
-                rand_mass   = [1, 8],
+                rand_mass   = [1, 4],
                 rand_fric   = None,
                 render_mode = 'human',
                 render_w    = 1500,
@@ -44,7 +44,7 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         """
         self.VERBOSE    = VERBOSE
         self.name       = name
-        self.xml_path = os.path.abspath(xml_path)
+        self.xml_path   = os.path.abspath(xml_path)
         self.frame_skip = frame_skip
         self.rand_mass  = rand_mass
         self.rand_fric  = rand_fric
@@ -65,6 +65,8 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
+        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
+        self.prev_torque  = a
 
         # Run sim
         self.do_simulation(a, self.frame_skip)
@@ -73,7 +75,7 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         # Accumulate
         self.a    = a
         self.o    = self._get_obs()
-        self.r    = ((x_pos_after-x_pos_before)/self.dt)
+        self.r    = (x_pos_after - x_pos_before) / self.dt        
         self.info = dict()
 
         # Done condition
@@ -89,8 +91,10 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat,
-            self.sim.data.qvel.flat
+            self.sim.data.qpos.flat[2:],
+            self.sim.data.qvel.flat,
+            self.prev_state,
+            self.prev_torque,
         ])
         
     def reset_model(self):
@@ -133,7 +137,6 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         if self.VERBOSE:
             print("HalfCheetah(2legs) with random leg weights")   
             print("Obs Dim: [{}] Act Dim: [{}] dt:[{}]".format(self.odim, self.adim, self.dt))
-            print("leg_mass: [{}] fric:[{}]".format(self.get_leg_weight(), self.get_fric()))
 
         # Timing
         self.hz = int(1/self.dt)
@@ -257,7 +260,15 @@ class HalfCheetahRandomEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
         return np.asarray(
             [q[3],q[4],q[5],q[6],q[7],q[8]]
             )*180.0/np.pi
-            
+
+    def get_heading(self):
+        """
+            Get z-axis rotation angle in [Deg]
+        """
+        q = self.data.get_body_xquat('torso')
+        _, _, z_deg = quaternion_to_euler_angle(q[0], q[1], q[2], q[3])
+        return z_deg
+      
     def get_time(self):
         """
             Get time in [Sec]
@@ -305,9 +316,9 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self,
                 VERBOSE     = True,
                 name        = 'Half cheetah with box',
-                xml_path    = 'xml/half_cheetah_box.xml',
+                xml_path    = 'mujoco_random_env/xml/half_cheetah_box.xml',
                 frame_skip  = 5,
-                rand_mass   = [1, 8],
+                rand_mass   = [1, 4],
                 rand_fric   = None,
                 render_mode = 'human',
                 render_w    = 1500,
@@ -340,7 +351,9 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
-
+        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
+        self.prev_torque  = a
+        
         # Run sim
         self.do_simulation(a, self.frame_skip)
         x_pos_after   = self.get_body_com("torso")[0]
@@ -348,7 +361,7 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
         # Accumulate
         self.a    = a
         self.o    = self._get_obs()
-        self.r    = ((x_pos_after-x_pos_before)/self.dt)
+        self.r    = (x_pos_after - x_pos_before) / self.dt
         self.info = dict()
 
         # Done condition
@@ -364,8 +377,10 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat,
-            self.sim.data.qvel.flat
+            self.sim.data.qpos.flat[2:],
+            self.sim.data.qvel.flat,
+            self.prev_state,
+            self.prev_torque,
         ])
         
     def reset_model(self):
@@ -527,6 +542,14 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
             [q[3],q[4],q[5],q[6],q[7],q[8]]
             )*180.0/np.pi
 
+    def get_heading(self):
+        """
+            Get z-axis rotation angle in [Deg]
+        """
+        q = self.data.get_body_xquat('torso')
+        _, _, z_deg = quaternion_to_euler_angle(q[0], q[1], q[2], q[3])
+        return z_deg
+    
     def get_time(self):
         """
             Get time in [Sec]
@@ -573,12 +596,12 @@ class HalfCheetahRandomEnvClassWithBox(mujoco_env.MujocoEnv, utils.EzPickle):
 class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self,
                 VERBOSE     = True,
-                name        = 'Half cheetah with box',
-                xml_path    = 'xml/half_cheetah_box_leg.xml',
+                name        = 'Half cheetah with random box and leg',
+                xml_path    = 'mujoco_random_env/xml/half_cheetah_box_leg.xml',
                 frame_skip  = 5,
-                rand_mass_box = [1, 8],
-                rand_mass_leg = [1, 8],
-                rand_fric   = [0.2, 5],
+                rand_mass_box = [1, 4],
+                rand_mass_leg = [1, 4],
+                rand_fric   = [0.1, 1.0],
                 render_mode = 'human',
                 render_w    = 1500,
                 render_h    = 1000,
@@ -611,7 +634,9 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
         """        
         # Before run
         x_pos_before      = self.get_body_com("torso")[0]
-
+        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
+        self.prev_torque  = a
+        
         # Run sim
         self.do_simulation(a, self.frame_skip)
         x_pos_after   = self.get_body_com("torso")[0]
@@ -635,8 +660,10 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
             Get observation
         """
         return np.concatenate([
-            self.sim.data.qpos.flat,
-            self.sim.data.qvel.flat
+            self.sim.data.qpos.flat[2:],
+            self.sim.data.qvel.flat,
+            self.prev_state,
+            self.prev_torque,
         ])
         
     def reset_model(self):
@@ -650,6 +677,8 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
         self.set_random_box_weight()
         self.set_random_leg_weight()
         self.set_random_fric()
+        
+        # Open xml
         try:
             mujoco_env.MujocoEnv.__init__(
             self,
@@ -665,6 +694,7 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
             )
         utils.EzPickle.__init__(self)
 
+        # Observation and action dimensions 
         self.odim = self.observation_space.shape[0]
         self.adim = self.action_space.shape[0]
 
@@ -849,6 +879,14 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
             [q[3],q[4],q[5],q[6],q[7],q[8]]
             )*180.0/np.pi
 
+    def get_heading(self):
+        """
+            Get z-axis rotation angle in [Deg]
+        """
+        q = self.data.get_body_xquat('torso')
+        _, _, z_deg = quaternion_to_euler_angle(q[0], q[1], q[2], q[3])
+        return z_deg
+    
     def get_time(self):
         """
             Get time in [Sec]
@@ -891,22 +929,179 @@ class HalfCheetahRandomEnvClassMixVersion(mujoco_env.MujocoEnv, utils.EzPickle):
             width  = self.render_w,
             height = self.render_h)
         return frame
+
+class HalfCheetahThreeLegsEnvClass(mujoco_env.MujocoEnv, utils.EzPickle):
+    def __init__(self,
+                VERBOSE     = True,
+                name        = 'Half cheetah',
+                xml_path    = 'mujoco_random_env/xml/half_cheetah_three_leg.xml',
+                frame_skip  = 5,
+                render_mode = 'human',
+                render_w    = 1500,
+                render_h    = 1000,
+                render_res  = 200
+                ):
+        """
+            Initialize
+        """
+        self.VERBOSE    = VERBOSE
+        self.name       = name
+        self.frame_skip = frame_skip
+        self.rand_mass  = None
+        self.xml_path = os.path.abspath(xml_path)
+        self.render_mode = render_mode
+        self.render_w = render_w
+        self.render_h = render_h
+        self.render_res = render_res
+        self.k_p = 0.01
+        self.k_i = 0.05
+        self.k_d = 0.0001
+        self.joint_pos_deg_min = np.array([-20,-20,-20])
+        self.joint_pos_deg_max = np.array([20,20,20])
+
+        # Open xml
+        try:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip,
+            mujoco_bindings = 'mujoco_py'
+            )
+        except:
+            mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path      = self.xml_path,
+            frame_skip      = self.frame_skip
+            )
+        utils.EzPickle.__init__(self)
+
+        # Observation and action dimensions 
+        self.odim = self.observation_space.shape[0]
+        self.adim = self.action_space.shape[0]
+
+        if self.VERBOSE:
+            print("HalfCheetah(1leg) with random leg weights")   
+            print("Obs Dim: [{}] Act Dim: [{}] dt:[{}]".format(self.odim, self.adim, self.dt))
+
+        # Timing
+        self.hz = int(1/self.dt)
+        # Viewer setup
+        if self.render_mode is not None:
+            self.viewer_custom_setup(
+                render_mode = self.render_mode,
+                render_w    = self.render_w,
+                render_h    = self.render_h,
+                render_res  = self.render_res
+            )
+
+    def step(self, a):
+        """
+            Step forward
+        """        
+        # Before run
+        x_pos_before      = self.get_body_com("torso")[0]
+        self.prev_state   = np.concatenate([self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat])
+        self.prev_torque  = a
+
+        # Run sim
+        self.do_simulation(a, self.frame_skip)
+        x_pos_after   = self.get_body_com("torso")[0]
+
+        # Accumulate
+        self.a    = a
+        self.o    = self._get_obs()
+        self.r    = (x_pos_after - x_pos_before) / self.dt
+        self.info = dict()
+
+        # Done condition
+        state   = self.state_vector()
+        r, p, y = quaternion_to_euler_angle(state[3], state[4], state[5], state[6])
+        notdone = np.isfinite(state).all and abs(r) < 170
+        self.d  = not notdone
+
+        return self.o, self.r, self.d, self.info
+
+    def _get_obs(self):
+        """
+            Get observation
+        """
+        return np.concatenate([
+            self.sim.data.qpos.flat[2:],
+            self.sim.data.qvel.flat,
+            self.prev_state,
+            self.prev_torque,
+        ])
         
+    def reset_model(self):
+        """
+            Reset
+        """
+        o = np.zeros(self.odim)
+        return o
+
+    def get_joint_pos_deg(self):
+        """
+            Get joint position in [Deg]
+        """
+        q = self.sim.data.qpos.flat
+        return np.asarray(
+            [q[3],q[4],q[5]]
+            )*180.0/np.pi
+ 
+    def get_heading(self):
+        """
+            Get z-axis rotation angle in [Deg]
+        """
+        q = self.data.get_body_xquat('torso')
+        _, _, z_deg = quaternion_to_euler_angle(q[0], q[1], q[2], q[3])
+        return z_deg
+               
+    def get_time(self):
+        """
+            Get time in [Sec]
+        """
+        return self.sim.data.time
+    
+    def viewer_custom_setup(
+        self,
+        render_mode = 'human',
+        render_w    = 1500,
+        render_h    = 1000,
+        render_res  = 200
+        ):
+        """
+            View setup
+        """
+        self.render_mode = render_mode
+        self.render_w    = render_w
+        self.render_h    = render_h
+        self.render_res  = render_res
+        
+        frame = self.render(
+            mode   = self.render_mode,
+            width  = self.render_w,
+            height = self.render_h)
+        self.viewer.cam.distance  = 8.0 # distance to plane (1.5)
+        self.viewer.cam.elevation = -45 # elevation angle (-30)
+        self.viewer.cam.lookat[0] = 0.0 # x-axis (let this follow the robot)
+        self.viewer.cam.lookat[1] = 0.0
+        self.viewer.cam.lookat[2] = 0.0
+        
+    def render_center(self):
+        """
+            Render with torso-centered
+        """
+        for d_idx in range(3): # follow the robot torso
+            self.viewer.cam.lookat[d_idx] = self.get_body_com("torso")[d_idx]
+        frame = self.render(
+            mode   = self.render_mode,
+            width  = self.render_w,
+            height = self.render_h)
+        return frame
+
 if __name__ == "__main__":
-    # env = HalfCheetahRandomEnvClassMixVersion(rand_mass_box=[1, 4], rand_mass_leg=[1, 4], rand_fric=[1, 2], render_mode=None)
-    env = HalfCheetahRandomEnvClass(rand_mass=[1,8], render_mode=None)
-    for i in range(10):
-        action = np.random.standard_normal(6) * 0.3
-        if i == 4:
-            env.set_leg_weight(leg_weight=3.33)
-            print("Leg Changed")
-        obs, _, _, _ = env.step(action)
-        print(env.get_leg_weight())
-    env = HalfCheetahRandomEnvClassWithBox(rand_mass=[1,8], render_mode=None)
-    for i in range(10):
-        action = np.random.standard_normal(6) * 0.3
-        if i == 4:
-            env.set_box_weight(box_weight=5.33)
-            print("Box Changed")
-        obs, _, _, _ = env.step(action)
-        print(env.get_box_weight())    
+    env = HalfCheetahRandomEnvClassMixVersion(render_mode=None)
+    for i in range(1000):
+        # env.render()
+        env.step(np.random.standard_normal(6))
+        print(env.get_heading())

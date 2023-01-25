@@ -2,7 +2,7 @@
   <compiler angle="radian" coordinate="local" inertiafromgeom="true" />
   <default>
     <joint armature=".1" damping=".01" limited="true" solimplimit="0 .8 .03" solreflimit=".02 1" stiffness="8" />
-    <geom conaffinity="0" condim="3" contype="1" friction="1 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1" />
+    <geom conaffinity="0" condim="3" contype="1" friction="0.4 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1" />
     <motor ctrllimited="true" ctrlrange="-1 1" />
   </default>
   <size nstack="300000" nuser_geom="1" />
@@ -57,7 +57,7 @@
         <body name="case" pos="0 0 -1" euler="0 0 0">
           <joint axis="0 0 1" name="connection_1" pos="0 0 0" range="-0.4 0.4" type="hinge" />
           <joint axis="0 1 0" name="connection_2" pos="0 0 0" range="-0.4 0.4" type="hinge" />
-          <geom name="case" type="mesh" mesh="Mario_case" pos="0 0 0" rgba="0.002 0.002 0.002 1" mass="4.99" />
+          <geom name="case" type="mesh" mesh="Mario_case" pos="0 0 0" rgba="0.333 0.333 0.333 1" mass="3" />
         </body>
       </body> 
     </body>   
