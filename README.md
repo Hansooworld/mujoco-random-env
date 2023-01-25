@@ -8,6 +8,7 @@ mujoco == 2.2.2
 ```
 </br>
 You can randomly change model's parameter (e.g. agent's mass, friction, ...) without any library. 
+
 You just need to insert randomness properties when you called the envrionment.
 
 To randomly change the agent's mass,
@@ -20,6 +21,7 @@ To randomly change the friction together,
 ```
 </br>
 I also added the environment with the box to make available to apply meta reinforcement learning conveniently.
+
 ```python
   env = AntRandomEnvClassWithBox(rand_mass=[1,5], rand_fric=None, render_mode=None, VERBOSE=True)
 ```
