@@ -23,7 +23,7 @@ To randomly change the friction together,
 I also added the environment with the box to make available to apply meta reinforcement learning conveniently.
 
 ```python
-  env = AntRandomEnvClassWithBox(rand_mass=[1,5], rand_fric=None, render_mode=None, VERBOSE=True)
+  env = AntRandomEnvClassWithBox(rand_mass_box=[1,5], rand_fric=None, render_mode=None, VERBOSE=True)
 ```
 The agent with the box looks like the following image.
 
