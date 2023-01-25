@@ -1,5 +1,12 @@
 # mujoco-random-env
 
+```python
+Required Version
+gym == 0.23.1
+mujoco_py == 2.1.2.14
+mujoco == 2.2.2
+```
+
 You can randomly change model's parameter (e.g. agent's mass, friction, ...) without any library. 
 
 You just need to insert randomness properties when you called the envrionment.
